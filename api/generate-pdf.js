@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer');
+=const chromium = require('chrome-aws-lambda');
 const fs = require('fs');
 const path = require('path');
 
@@ -6,14 +6,8 @@ module.exports = async (req, res) => {
   try {
     // Handle CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader(
-      'Access-Control-Allow-Methods',
-      'GET,POST,PUT,DELETE,OPTIONS'
-    );
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'Content-Type, Authorization'
-    );
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     // Handle OPTIONS preflight request
     if (req.method === 'OPTIONS') {
@@ -38,11 +32,18 @@ module.exports = async (req, res) => {
 
     console.log(htmlContent, 'html');
 
-    const browser = await puppeteer.launch({ headless: true });
+    // Launch Puppeteer using chrome-aws-lambda
+    const browser = await chromium.puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
+    });
+
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-    const pdfPath = path.join(__dirname, 'output.pdf');
+    const pdfPath = path.join('/tmp', 'output.pdf'); // Use /tmp in serverless environments
 
     await page.pdf({
       path: pdfPath,
