@@ -1,31 +1,19 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const app = express();
-const port = 8000;
 
-// Enable CORS with explicit origin allowed
-const corsOptions = {
-  origin: 'http://localhost:3001', // Replace with your frontend URL
-  methods: 'GET,POST,PUT,DELETE,OPTIONS',
-  allowedHeaders: 'Content-Type,Authorization',
-};
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-app.use(cors(corsOptions));
-app.use(bodyParser.json());
+// Import API routes
+const generatePdf = require('./api/generate-pdf');
 
-// Preflight request handling (for CORS)
-app.options('*', cors(corsOptions)); // Handle preflight requests
-
-// Import the PDF generation route
-const generatePdfRoute = require('./api/generate-pdf');
-
-// Use the generate PDF route
-app.use('/api', generatePdfRoute);
+// Route for PDF generation
+app.post('/api/generate-pdf', generatePdf);
 
 // Start the server
+const port = process.env.PORT || 8000;
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
-
-module.exports = app;

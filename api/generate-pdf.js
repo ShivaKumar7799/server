@@ -1,46 +1,56 @@
-const express = require('express');
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
-const router = express.Router(); // Use express Router for API routing
 
-router.post('/generate-pdf', async (req, res) => {
+module.exports = async (req, res) => {
   try {
-    const fontPath = path.resolve(__dirname, '../Playmaker D.ttf');
-    const fontFile = fs.readFileSync(fontPath);
-    const htmlContent = `<!DOCTYPE html>
-                          <html lang="en">
-                            <head>
-                              <meta charset="UTF-8" />
-                              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                              <title>Document</title>
-                              <style>
-                            
-                              </style>
-                            </head>
-                            <body>
-                              <h1>font-familyasdas كيف حالك</h1>
-                            </body>
-                          </html>`;
+    // Handle CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'GET,POST,PUT,DELETE,OPTIONS'
+    );
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization'
+    );
 
-    // Launch Puppeteer
-    const browser = await puppeteer.launch({ headless: 'new' });
+    // Handle OPTIONS preflight request
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Document</title>
+          <style>
+          </style>
+        </head>
+        <body>
+          <h1>font-familyasdas كيف حالك </h1>
+        </body>
+      </html>
+    `;
+
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
-
-    // Generate PDF
-    const pdfPath = path.join('/tmp', 'output.pdf'); // Temporary folder for Vercel
-
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+    const pdfPath = path.join(__dirname, 'output.pdf');
 
     await page.pdf({
       path: pdfPath,
       format: 'A4',
+      margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' },
       printBackground: true,
     });
 
     await browser.close();
 
-    // Send the generated PDF as a response
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': 'attachment; filename=output.pdf',
@@ -50,12 +60,10 @@ router.post('/generate-pdf', async (req, res) => {
     pdfStream.pipe(res);
 
     pdfStream.on('end', () => {
-      fs.unlinkSync(pdfPath); // Delete the PDF file after sending it
+      fs.unlinkSync(pdfPath); // Clean up after sending the file
     });
   } catch (error) {
     console.error('Error generating PDF:', error);
     res.status(500).send('Error generating PDF');
   }
-});
-
-module.exports = router;
+};
