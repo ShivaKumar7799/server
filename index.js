@@ -1,18 +1,22 @@
-// index.js
 const express = require('express');
-const cors = require('cors'); // Import cors package
+const cors = require('cors');
+const bodyParser = require('body-parser');
 const app = express();
-const port = process.env.PORT || 3000; // Use the PORT from the environment or default to 3000
+const port = 8000;
 
-// Use CORS middleware
-app.use(cors()); // This will allow all origins by default
+// Enable CORS
+app.use(cors());
+app.use(bodyParser.json());
 
-// Define a basic route
-app.get('/', (req, res) => {
-  res.send('Hello, World!'); // Respond with "Hello, World!"
-});
+// Import the PDF generation route
+const generatePdfRoute = require('./api/generate-pdf');
+
+// Use the generate PDF route
+app.use('/api', generatePdfRoute);
 
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+module.exports = app;
