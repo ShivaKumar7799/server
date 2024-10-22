@@ -33,11 +33,23 @@ module.exports = async (req, res) => {
     console.log(htmlContent, 'html');
 
     // Launch Puppeteer using chrome-aws-lambda
-    const browser = await chromium.puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+    // const browser = await chromium.puppeteer.launch({
+    //   args: chromium.args,
+    //   defaultViewport: chromium.defaultViewport,
+    //   executablePath: await chromium.executablePath,
+    //   headless: chromium.headless,
+    // });
+
+    const browser = await puppeteer.launch({
+        executablePath: "/usr/bin/google-chrome-stable",
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage", // Helps with memory management in some environments
+            "--disable-gpu",
+            "--single-process",
+        ],
+        headless: true,
     });
 
     const page = await browser.newPage();
